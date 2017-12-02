@@ -8,15 +8,20 @@ from mpl_toolkits.mplot3d import axes3d
 df=pd.read_csv("/home/arindam/Desktop/tfmodel/data.csv")
 in_data=df.drop(["Close","Volume"],axis=1)
 label=df.drop(["Open","High","Low","Volume"],axis=1)
+in_data["Open"] = pd.to_numeric(in_data["Open"])   #convert "Open" to type float
 in_data.loc[:,("Result")]=in_data["Open"]<=label["Close"]
 in_data.loc[:,("Result")]=in_data["Result"].astype(int)
-pro=in_data.ix[in_data["Result"]==1]
-loss=in_data.ix[in_data["Result"]==0]
+#pro=in_data.ix[in_data["Result"]==1] .ix[] has been deprecated from version 0.20.0 onwards
+pro=in_data.loc[in_data["Result"]==1]
+loss=in_data.loc[in_data["Result"]==0]
+#loss=in_data.ix[in_data["Result"]==0] .ix[] has been deprecated from version 0.20.0 onwards
 in_data.loc[:,("Covar")]=in_data["Open"]<=label["Close"]
 
-inputx=in_data.loc[:,["Open","High","Low"]].astype(np.float32).as_matrix()
-pro_mat=pro.loc[:,["Open","High","Low"]].astype(np.float32).as_matrix()
-loss_mat=loss.loc[:,["Open","High","Low"]].astype(np.float32).as_matrix()
+in_data["Low"] = pd.to_numeric(in_data["Low"])   #convert the values of "Low" to float
+in_data["High"] = pd.to_numeric(in_data["High"]) #convert the values of "High" to float
+inputx=in_data.loc[:,["Open","High","Low"]].as_matrix()#removed astype(np.float32) not working with later versions of pandas
+pro_mat=pro.loc[:,["Open","High","Low"]].as_matrix()#removed astype(np.float32) not working with later versions of pandas
+loss_mat=loss.loc[:,["Open","High","Low"]].as_matrix()#removed astype(np.float32) not working with later versions of pandas
 inputy=in_data.loc[:,("Result")].as_matrix()
 n=inputx.size/3
 
@@ -46,10 +51,9 @@ for m in inputx:
     mat.append(m)
     mat=np.array(mat)
     covar+=(mat.T*mat)*(1/n)
-
+#covariance matrix generated contains nan values, error not rectified 
 u,s,v=np.linalg.svd(covar)
-u_red=u[:,1:3]
-
+u_red=u[:,1:3]    #SVD doesn't converge, error not rectified
 input_x=[]
 for i in inputx:
     m=[]
